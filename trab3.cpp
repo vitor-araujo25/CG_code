@@ -13,16 +13,37 @@
 
 using namespace std;
 
-class Point{
+class Vector{
     protected:
         float X;
         float Y;
+        float norm;
     public:
-        Point(){}
+        Vector(){}
 
-        Point (float x, float y){
+        Vector (float x, float y){
             this->X = (2.*x)/SCREEN_WIDTH - 1.;
             this->Y = -(2.*y)/SCREEN_HEIGHT + 1.;
+            this->norm = sqrt(pow(this->X,2) + pow(this->Y,2));
+        }
+
+        Vector(Vector* p1, Vector* p2){
+            this->X = p2->getX() - p1->getX();
+            this->Y = p2->getY() - p1->getY();
+            this->norm = sqrt(pow(this->X,2) + pow(this->Y,2));
+        }
+
+        //calcula o produto vetorial this X v
+        float crossProduct(Vector* v){
+            return (this->X)*(v->getY()) - (this->Y)*(v->getX());
+        }
+
+        float getNorm(){
+            return this->norm;
+        }
+
+        float dotProduct(Vector* v){
+            return (this->X)*(v->getX()) + (this->Y)*(v->getY());
         }
 
         float getX(){
@@ -39,37 +60,14 @@ class Point{
         }
 };
 
-class Vector: public Point{
-    float norm;
-    public:
-        Vector(float x, float y): Point(x,y){
-            this->norm = sqrt(pow(this->X,2) + pow(this->Y,2));
-        }
-
-        Vector(Point* p1, Point* p2){
-            this->X = p2->getX() - p1->getX();
-            this->Y = p2->getY() - p1->getY();
-            this->norm = sqrt(pow(this->X,2) + pow(this->Y,2));
-        }
-
-        //calcula o produto vetorial this X v
-        float crossProduct(Vector* v){
-            return (this->X)*(v->getY()) - (this->Y)*(v->getX());
-        }
-
-        float getNorm(){
-            return this->norm;
-        }
-};
-
 
 int hullClose = 0;
 
-vector<Point*> points;
-vector<Point*> hullVertices;
+vector<Vector*> points;
+vector<Vector*> hullVertices;
 
 void reset(){
-    for(Point* i: points){
+    for(Vector* i: points){
         delete i;
     }
     points.clear();
@@ -81,16 +79,39 @@ void reset(){
 void mouse(int button, int state, int X, int Y){
     // Respond to mouse button presses.
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN && !hullClose){
-        points.push_back(new Point(X,Y)); 
+        points.push_back(new Vector(X,Y)); 
         glutPostRedisplay();
+    }
+}
+
+void jarvis(int p0){
+    Vector* baseline = new Vector(1,0);
+    vector<Vector*> unvisitedPoints;
+    Vector* first = points[p0];
+    hullVertices.push_back(first);
+    
+
+    for(int i = 0; i < unvisitedPoints.size(); i++){
+        unvisitedPoints.push_back(points[i]);
+    }
+    unvisitedPoints.erase(unvisitedPoints.begin()+p0);
+    
+    for(Vector* p: unvisitedPoints){
+        
     }
 }
 
 void closeConvexHull(){
     if(!hullClose){
         hullClose = 1;
-        //TODO: implementação do algoritmo de Jarvis
+        int lowestYindex = 0;
+        for(int i = 0; i < points.size(); i++){
+            if(points[i]->getY() < points[lowestYindex]->getY()){
+                lowestYindex = i;
+            }
+        }
 
+        jarvis(lowestYindex);
     }else{
         hullClose = 0;
     }
@@ -124,7 +145,7 @@ void display() {
 
     glBegin(GL_POINTS);
         
-    for(Point* i: points){
+    for(Vector* i: points){
         glVertex2f(i->getX(),i->getY());
     }
 
@@ -135,7 +156,7 @@ void display() {
         glColor3f(1.0,1.0,1.0);
         glBegin(GL_LINE_STRIP);
 
-        for(Point* i: hullVertices){
+        for(Vector* i: hullVertices){
             glVertex2f(i->getX(),i->getY());
         }
     }
