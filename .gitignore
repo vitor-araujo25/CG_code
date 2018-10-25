@@ -4,3 +4,5 @@
 !/.gitignore
 !*/
 .vscode/
+/*/*.o
+!/README.md
